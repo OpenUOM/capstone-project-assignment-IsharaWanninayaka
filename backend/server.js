@@ -11,7 +11,8 @@ const {
   readTeacherInfo,
   updateStudent,
   updateTeacher,
-  dbinitialize
+  dbinitialize,
+  getTeachers
 } = require ("./database.js");
 
 const app = express();
@@ -57,14 +58,21 @@ app.post("/addTeacher", async function (req, res) {
 });
 
 app.post("/editTeacher", async function (req, res) {
-  let reqBody = req.body;
-  console.log(
-    "Request received to update teacher. Req body: " + JSON.stringify(reqBody)
-  );
-  let data = await updateTeacher(reqBody.name,reqBody.age,reqBody.id);
+  try {
+    const reqBody = req.body;
+    console.log("Request received to update teacher. Req body: " + JSON.stringify(reqBody));
 
-  res.setHeader("Content-Type", "application/json");
-  res.end(JSON.stringify(data));
+    await updateTeacher(reqBody.name, reqBody.age, reqBody.id);
+
+    // ✅ Fetch updated list after edit
+    const updatedList = await getTeachers();
+
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(updatedList));
+  } catch (error) {
+    console.error("Error updating teacher:", error);
+    res.status(500).json({ error: "Failed to update teacher" });
+  }
 });
 
 app.post("/deleteTeacher", async function (req, res) {
